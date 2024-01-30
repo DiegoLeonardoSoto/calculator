@@ -56,8 +56,9 @@ button:hover {
   border-radius: 0.5rem;
 }
 
-.display {
+#display {
   grid-column-start: span 5;
+  justify-content: flex-end;
 }
 
 #equal {
