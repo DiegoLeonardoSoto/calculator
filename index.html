@@ -10,14 +10,24 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
     />
+    <link
+      data-n-head="ssr"
+      rel="icon"
+      type="image/png"
+      size="32"
+      data-hid="favicon-32"
+      href="icons8-calculator-color-hand-drawn-32.png"
+    />
   </head>
   <body>
     <div class="container">
-      <div id="display"></div>
+      <div id="display">
+        <span id="displayText"></span> <span id="placeHolder">0</span>
+      </div>
       <button class="number">7</button>
       <button class="number">8</button>
       <button class="number">9</button>
-      <button>+/-</button>
+      <button id="changeSign">+/-</button>
       <button id="arrow">
         <span class="material-symbols-outlined"> arrow_back </span>
       </button>
@@ -36,7 +46,7 @@
 
       <button id="clear">C</button>
       <button class="number">0</button>
-      <button>.</button>
+      <button id="decimal">.</button>
       <button class="operator">/</button>
     </div>
   </body>
