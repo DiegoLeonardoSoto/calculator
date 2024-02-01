@@ -19,39 +19,36 @@ let operatorsFunctions = {
   }
 }
 
-function addNumber(e) {
-  if (isNaN(display.innerHTML[0])) {
+function addNumber(number) {
+  if (isNaN(display.innerHTML[0]) && display.innerHTML[0] !== '-') {
     clear()
   }
 
   if (placeHolder.innerText.length > 0) placeHolder.innerText = ''
 
   if (isNaN(operation[i])) {
-    operation.push(+this.innerText)
+    number === '0.' ? operation.push(number) : operation.push(+number)
     ++i
   } else {
-    operation[i] = operation[i] + this.innerText
+    operation[i] = operation[i] + number
     operation[i] = +operation[i]
   }
 
-  display.innerHTML += this.innerText
-  console.log(operation)
+  display.innerHTML += number
 }
 
 function addOperator(e) {
   ++i
-
+  if (decimalBtn.disabled === true) toggleDecimalBtn()
   if (i === 3) {
     operate(this.innerText)
   }
 
   operation.push(this.innerText)
   display.innerHTML += ' ' + this.innerText + ' '
-  console.log(operation)
 }
 
 function operate(from) {
-  console.log(from)
   let result
   try {
     const firstNum = operation.shift(),
@@ -60,7 +57,7 @@ function operate(from) {
 
     if (isNaN(firstNum) || isNaN(secondNum)) throw new Error()
 
-    /* i = 0 */
+    i = 1
     result = operatorsFunctions[operator](firstNum, secondNum)
     operation.push(result)
   } catch (error) {
@@ -72,10 +69,10 @@ function operate(from) {
 
 function renderResult(result, from) {
   if (from === '=') {
+    toggleDecimalBtn()
     clear()
     placeHolder.innerText = result
   } else {
-    i = 1
     display.innerText = result
   }
 }
@@ -85,29 +82,80 @@ function clear(e) {
   i = -1
   display.innerText = ''
   placeHolder.innerText = 0
+  if (decimalBtn.disabled === true) {
+    toggleDecimalBtn()
+  }
 }
 
-function undo(e) {
-  let currentDisplay = display.innerHTML
+function undo(params) {
+  if (display.innerText === '') return
+  let currentDisplay = display.innerText
+  const currentDisplayLength = currentDisplay.length
+  let newDisplay = ''
 
-  if (currentDisplay.length < 0) return ''
+  if (!isNaN(currentDisplay[currentDisplayLength - 1])) {
+    newDisplay = currentDisplay.slice(0, currentDisplayLength - 1)
 
-  if (currentDisplay[currentDisplay.length - 1] === ' ') {
-    display.innerHTML = currentDisplay.slice(0, currentDisplay.length - 3)
-    operation.pop()
-    --i
-  } else {
-    let lastNum = operation[i].toString()
-    if (lastNum.length > 1) {
-      lastNum = lastNum.slice(0, lastNum.length - 1)
-      operation[i] = +lastNum
-    } else {
+    let numToString = operation[i].toString()
+    let newNum = numToString.slice(0, numToString.length - 1)
+
+    if (newNum.length === 0) {
       operation.pop()
-      --i
+      i--
+    } else {
+      operation[i] = +newNum
     }
-
-    display.innerHTML = currentDisplay.slice(0, currentDisplay.length - 1)
   }
+
+  if (operatorsFunctions[currentDisplay[currentDisplayLength - 1]]) {
+    newDisplay = currentDisplay.slice(0, currentDisplayLength - 2)
+
+    operation.pop()
+    i--
+  }
+
+  if (currentDisplay[currentDisplayLength - 1] === ' ') {
+    newDisplay = currentDisplay.slice(0, currentDisplayLength - 3)
+
+    operation.pop()
+    i--
+  }
+
+  if (
+    currentDisplay[currentDisplayLength - 2] === '.' &&
+    currentDisplay[currentDisplayLength - 3] !== '0'
+  ) {
+    newDisplay = currentDisplay.slice(0, currentDisplayLength - 2)
+    toggleDecimalBtn()
+  }
+
+  if (
+    currentDisplay[currentDisplayLength - 3] === '0' &&
+    currentDisplay[currentDisplayLength - 2] === '.' &&
+    !isNaN(currentDisplay[currentDisplayLength - 1])
+  ) {
+    newDisplay = currentDisplay.slice(0, currentDisplayLength - 3)
+    toggleDecimalBtn()
+
+    operation.pop()
+    i--
+  }
+
+  if (
+    currentDisplay[currentDisplayLength - 2] === '0' &&
+    currentDisplay[currentDisplayLength - 1] === '.'
+  ) {
+    newDisplay = currentDisplay.slice(0, currentDisplayLength - 2)
+    toggleDecimalBtn()
+
+    operation.pop()
+    i--
+  }
+  display.innerText = newDisplay
+}
+
+function toggleDecimalBtn() {
+  decimalBtn.disabled = !decimalBtn.disabled
 }
 
 function changeSign(e) {
@@ -115,8 +163,23 @@ function changeSign(e) {
     operation[i] = operation[i] * -1
     display.innerText = operation.join(' ')
   }
+}
 
-  console.log(operation)
+function addZero(e) {
+  if (!isNaN(operation[i]) && operation[i].toString().length > 0) {
+    addNumber(this.innerText)
+  }
+}
+
+function addDecimal() {
+  if (!operation[i] || isNaN(operation[i])) {
+    addNumber('0.')
+    toggleDecimalBtn()
+  } else {
+    operation[i] += '.'
+    display.innerText += '.'
+    toggleDecimalBtn()
+  }
 }
 
 const numbers = document.querySelectorAll('.number')
@@ -125,11 +188,19 @@ const clearBtn = document.querySelector('#clear')
 const arrowBtn = document.querySelector('#arrow')
 const equalBtn = document.querySelector('#equal')
 const changeSignBtn = document.querySelector('#changeSign')
+const zeroBtn = document.querySelector('#zero')
+const decimalBtn = document.querySelector('#decimal')
 
-numbers.forEach((number) => number.addEventListener('click', addNumber))
+numbers.forEach((number) =>
+  number.addEventListener('click', function () {
+    addNumber(this.innerText)
+  })
+)
 operators.forEach((operator) => operator.addEventListener('click', addOperator))
 
 clearBtn.addEventListener('click', clear)
 arrowBtn.addEventListener('click', undo)
 changeSignBtn.addEventListener('click', changeSign)
 equalBtn.addEventListener('click', (e) => operate('='))
+zeroBtn.addEventListener('click', addZero)
+decimalBtn.addEventListener('click', addDecimal)
